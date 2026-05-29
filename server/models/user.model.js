@@ -1,0 +1,33 @@
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+
+const userSchema = mongoose.Schema(
+  {
+    username: { type: String, required: true, unique: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true },
+    password: { type: String, required: true, minlength: 6 },
+    profilePic: { type: String, default: "" },
+    bio: { type: String, default: "" },
+    followers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    following: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+  },
+  { timestamps: true },
+);
+
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+export const userModel = mongoose.model("User", userSchema);
