@@ -16,7 +16,14 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const user = new userModel({ username, email, password });
+    const salt = bcrypt.genSaltSync(10);
+    const hashedPassword = bcrypt.hashSync(password, salt);
+
+    const user = new userModel({
+      username,
+      email,
+      password: hashedPassword, // save hashed password directly
+    });
     await user.save();
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -45,7 +52,9 @@ export const loginUser = async (req, res) => {
 
     // Validation
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
     }
 
     const user = await userModel.findOne({ email });
@@ -55,7 +64,8 @@ export const loginUser = async (req, res) => {
     }
 
     const isPassword = await bcrypt.compare(password, user.password);
-    if (!isPassword) return res.status(400).json({ message: "Incorrect Password" });
+    if (!isPassword)
+      return res.status(400).json({ message: "Incorrect Password" });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
