@@ -1,3 +1,4 @@
+import { userModel } from "../models/user.model.js";
 import { postModel } from "./../models/post.model.js";
 
 export const createPost = async (req, res) => {
@@ -54,6 +55,25 @@ export const getAllPosts = async (req, res) => {
     return res.status(200).json({
       posts,
     });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getFeed = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const currentUser = await userModel.findById(userId);
+
+    const followingArray = currentUser.following;
+    const allPosts = await postModel
+      .find({
+        author: { $in: [...followingArray, userId] },
+      })
+      .sort({ createdAt: -1 })
+      .populate("author", "username profilePic");
+
+    return res.status(200).json({ posts: allPosts });
   } catch (error) {
     console.log(error);
   }

@@ -8,7 +8,6 @@ export const authMiddleware = async (req, res, next) => {
       return res.status(400).json({ message: "No token provided" });
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log(decoded);
 
     const user = await userModel.findById(decoded.id).select("-password");
     req.user = user;
